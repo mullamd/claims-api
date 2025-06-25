@@ -30,15 +30,14 @@ jobs:
         if: always()  # Ensures email sends on success or failure
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.gmail.com  # Change if you're not using Gmail
+          server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: GitHub Actions CI/CD - ${{ job.status }}
-          to: your_email@example.com  # Replace with your email
+          to: mm.cloudenginner@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             The CI/CD pipeline for your repository has completed.
 
             Status: ${{ job.status }}
-
