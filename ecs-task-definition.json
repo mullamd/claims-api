@@ -1,0 +1,24 @@
+{
+  "family": "claims-api-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::461512246753:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "claims-api-container",
+      "image": "461512246753.dkr.ecr.us-east-1.amazonaws.com/claims-api-repo:latest",
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512"
+}

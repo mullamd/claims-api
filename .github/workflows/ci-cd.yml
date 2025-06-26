@@ -1,11 +1,11 @@
-name: CI/CD to Amazon ECR
+name: CI/CD to Amazon ECR and ECS
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-push:
+  build-push-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,17 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
+      - name: Register ECS Task Definition
+        run: |
+          aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster claims-api-cluster \
+            --service claims-api-task-service-t1f15upb \
+            --force-new-deployment
+
       - name: Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -42,7 +53,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: GitHub Actions CI/CD - ${{ job.status }}
-          to: mm.cloudenginner@gmail.com  # Correct recipient
+          to: mm.cloudenginner@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             The CI/CD pipeline for your repository has completed.
