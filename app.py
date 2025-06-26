@@ -23,7 +23,7 @@ def get_all_claims():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT claim_id, customer_id, claim_amount, location, claim_type, status, risk_level FROM claims;")
+        cur.execute("SELECT claim_id, customer_id, claim_amount, location, claim_type, status, risk_level FROM insurance_ai.ai_claim_explanations;")
         rows = cur.fetchall()
         return [
             {
@@ -47,7 +47,7 @@ def get_claim_by_id(claim_id: int):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM claims WHERE claim_id = %s;", (claim_id,))
+        cur.execute("SELECT * FROM insurance_ai.ai_claim_explanations WHERE claim_id = %s;", (claim_id,))
         row = cur.fetchone()
         if row:
             return {
@@ -77,7 +77,7 @@ def get_risky_claims():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM claims WHERE high_claim_flag = 1 OR suspicious_claim_score >= 2;")
+        cur.execute("SELECT * FROM insurance_ai.ai_claim_explanations WHERE high_claim_flag = 1 OR suspicious_claim_score >= 2;")
         rows = cur.fetchall()
         return [
             {
@@ -102,7 +102,7 @@ def get_suspicious_claims():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM claims WHERE risk_level = 'Suspicious';")
+        cur.execute("SELECT * FROM insurance_ai.ai_claim_explanations WHERE risk_level = 'Suspicious';")
         rows = cur.fetchall()
         return [
             {
@@ -127,7 +127,7 @@ def search_claims(location: str = Query(None), status: str = Query(None)):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        query = "SELECT * FROM claims WHERE 1=1"
+        query = "SELECT * FROM insurance_ai.ai_claim_explanations WHERE 1=1"
         params = []
         if location:
             query += " AND location = %s"
