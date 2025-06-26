@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: GitHub Actions CI/CD - ${{ job.status }}
-          to: to: mm.cloudenginner@gmail.com
+          to: mm.cloudenginner@gmail.com  # Correct recipient
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             The CI/CD pipeline for your repository has completed.
