@@ -47,19 +47,19 @@ jobs:
           content_type: text/html
           body: |
             <h2>GitHub Actions CI/CD Pipeline Notification</h2>
-            <p>The CI/CD pipeline for your <b>claims-api</b> repository has completed.</p>
-            <table border="1" cellspacing="0" cellpadding="5">
-              <tr>
-                <th>Repository</th>
+            <p>The CI/CD pipeline for your <strong>claims-api</strong> repository has completed.</p>
+            <table border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse;">
+              <tr style="background-color:#f2f2f2;">
+                <th align="left">Repository</th>
                 <td>claims-api</td>
               </tr>
               <tr>
-                <th>Branch</th>
+                <th align="left">Branch</th>
                 <td>main</td>
               </tr>
               <tr>
-                <th>Status</th>
-                <td><b>${{ job.status }}</b></td>
+                <th align="left">Status</th>
+                <td><strong>${{ job.status }}</strong></td>
               </tr>
             </table>
             <p>View full logs: <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">GitHub Actions Run</a></p>
