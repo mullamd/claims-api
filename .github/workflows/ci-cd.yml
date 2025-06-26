@@ -34,7 +34,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
       - name: Send Email Notification
-        if: always()
+        if: always()  # Ensures email sends on success or failure
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -42,9 +42,24 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: GitHub Actions CI/CD - ${{ job.status }}
-          to: mm.cloudenginner@gmail.com  # Correct recipient
+          to: mm.cloudenginner@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
+          content_type: text/html
           body: |
-            The CI/CD pipeline for your repository has completed.
-
-            Status: ${{ job.status }}
+            <h2>GitHub Actions CI/CD Pipeline Notification</h2>
+            <p>The CI/CD pipeline for your <b>claims-api</b> repository has completed.</p>
+            <table border="1" cellspacing="0" cellpadding="5">
+              <tr>
+                <th>Repository</th>
+                <td>claims-api</td>
+              </tr>
+              <tr>
+                <th>Branch</th>
+                <td>main</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td><b>${{ job.status }}</b></td>
+              </tr>
+            </table>
+            <p>View full logs: <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">GitHub Actions Run</a></p>
