@@ -1,18 +1,25 @@
 from fastapi import FastAPI, HTTPException, Query
 import psycopg2
+import psycopg2.extras
 import os
 
 app = FastAPI()
 
 # Function to get Redshift connection
 def get_connection():
-    return psycopg2.connect(
-        host=os.getenv("REDSHIFT_HOST"),
-        port=int(os.getenv("REDSHIFT_PORT", "5439")),
-        database=os.getenv("REDSHIFT_DB", "dev"),
-        user=os.getenv("REDSHIFT_USER"),
-        password=os.getenv("REDSHIFT_PASSWORD")
-    )
+    try:
+        conn = psycopg2.connect(
+            host=os.environ["REDSHIFT_HOST"],
+            port=int(os.environ.get("REDSHIFT_PORT", "5439")),
+            database=os.environ.get("REDSHIFT_DB", "dev"),
+            user=os.environ["REDSHIFT_USER"],
+            password=os.environ["REDSHIFT_PASSWORD"]
+        )
+        return conn
+    except KeyError as e:
+        raise HTTPException(status_code=500, detail=f"Missing environment variable: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
 @app.get("/")
 def root():
@@ -23,7 +30,10 @@ def get_all_claims():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT claim_id, customer_id, claim_amount, location, claim_type, status, risk_level FROM insurance_ai.ai_claim_explanations;")
+        cur.execute("""
+            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, risk_level 
+            FROM insurance_ai.ai_claim_explanations;
+        """)
         rows = cur.fetchall()
         return [
             {
@@ -34,7 +44,8 @@ def get_all_claims():
                 "claim_type": r[4],
                 "status": r[5],
                 "risk_level": r[6]
-            } for r in rows
+            }
+            for r in rows
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -47,7 +58,9 @@ def get_claim_by_id(claim_id: int):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM insurance_ai.ai_claim_explanations WHERE claim_id = %s;", (claim_id,))
+        cur.execute("""
+            SELECT * FROM insurance_ai.ai_claim_explanations WHERE claim_id = %s;
+        """, (claim_id,))
         row = cur.fetchone()
         if row:
             return {
@@ -77,7 +90,10 @@ def get_risky_claims():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM insurance_ai.ai_claim_explanations WHERE high_claim_flag = 1 OR suspicious_claim_score >= 2;")
+        cur.execute("""
+            SELECT * FROM insurance_ai.ai_claim_explanations 
+            WHERE high_claim_flag = 1 OR suspicious_claim_score >= 2;
+        """)
         rows = cur.fetchall()
         return [
             {
@@ -89,7 +105,8 @@ def get_risky_claims():
                 "status": r[5],
                 "risk_level": r[11],
                 "suspicious_claim_score": r[10]
-            } for r in rows
+            }
+            for r in rows
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -102,7 +119,9 @@ def get_suspicious_claims():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM insurance_ai.ai_claim_explanations WHERE risk_level = 'Suspicious';")
+        cur.execute("""
+            SELECT * FROM insurance_ai.ai_claim_explanations WHERE risk_level = 'Suspicious';
+        """)
         rows = cur.fetchall()
         return [
             {
@@ -114,7 +133,8 @@ def get_suspicious_claims():
                 "status": r[5],
                 "risk_level": r[11],
                 "suspicious_claim_score": r[10]
-            } for r in rows
+            }
+            for r in rows
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -146,7 +166,8 @@ def search_claims(location: str = Query(None), status: str = Query(None)):
                 "claim_type": r[4],
                 "status": r[5],
                 "risk_level": r[11]
-            } for r in rows
+            }
+            for r in rows
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

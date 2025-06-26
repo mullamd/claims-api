@@ -13,7 +13,29 @@
           "protocol": "tcp"
         }
       ],
-      "essential": true
+      "essential": true,
+      "environment": [
+        {
+          "name": "REDSHIFT_HOST",
+          "value": "redshift-cluster-2.cax5lwhmspd1.us-east-1.redshift.amazonaws.com"
+        },
+        {
+          "name": "REDSHIFT_USER",
+          "value": "redshift_admin"
+        },
+        {
+          "name": "REDSHIFT_PASSWORD",
+          "value": "347634M-ulla7710"
+        },
+        {
+          "name": "REDSHIFT_DB",
+          "value": "dev"
+        },
+        {
+          "name": "REDSHIFT_PORT",
+          "value": "5439"
+        }
+      ]
     }
   ],
   "requiresCompatibilities": [
