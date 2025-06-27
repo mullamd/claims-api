@@ -33,15 +33,18 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      - name: Register ECS Task Definition
+      - name: Register ECS Task Definition and Capture ARN
+        id: register_task
         run: |
-          aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
+          TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
 
-      - name: Deploy to ECS
+      - name: Deploy to ECS with Latest Task Definition
         run: |
           aws ecs update-service \
             --cluster claims-api-cluster \
             --service claims-api-task-service-t1f15upb \
+            --task-definition ${{ env.TASK_DEF_ARN }} \
             --force-new-deployment
 
       - name: Send Email Notification
