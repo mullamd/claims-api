@@ -21,67 +21,6 @@ def get_connection():
 def root():
     return {"message": "Claims API is working!"}
 
-@app.get("/claims")
-def get_all_claims():
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, suspicious_claim_score, risk_level, ai_explanation
-            FROM insurance_ai.ai_claim_explanations;
-        """)
-        rows = cur.fetchall()
-        return [
-            {
-                "claim_id": r[0],
-                "customer_id": r[1],
-                "claim_amount": r[2],
-                "location": r[3],
-                "claim_type": r[4],
-                "status": r[5],
-                "suspicious_claim_score": int(r[6]),
-                "risk_level": r[7],
-                "ai_explanation": r[8]
-            } for r in rows
-        ]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if 'cur' in locals(): cur.close()
-        if 'conn' in locals(): conn.close()
-
-@app.get("/claims/{claim_id}")
-def get_claim_by_id(claim_id: int):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT * FROM insurance_ai.ai_claim_explanations WHERE claim_id = %s;
-        """, (claim_id,))
-        row = cur.fetchone()
-        if row:
-            return {
-                "claim_id": row[0],
-                "customer_id": row[1],
-                "claim_amount": row[2],
-                "location": row[3],
-                "claim_type": row[4],
-                "status": row[5],
-                "is_zero_amount": row[6],
-                "is_missing_location": row[7],
-                "high_claim_flag": row[8],
-                "duplicate_claim_flag": row[9],
-                "suspicious_claim_score": int(row[10]),
-                "risk_level": row[11],
-                "ai_explanation": row[12]
-            }
-        raise HTTPException(status_code=404, detail="Claim not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if 'cur' in locals(): cur.close()
-        if 'conn' in locals(): conn.close()
-
 @app.get("/claims/risky")
 def get_risky_claims():
     try:
@@ -160,6 +99,67 @@ def get_low_risk_claims():
                 "ai_explanation": r[12]
             } for r in rows
         ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
+
+@app.get("/claims")
+def get_all_claims():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, suspicious_claim_score, risk_level, ai_explanation
+            FROM insurance_ai.ai_claim_explanations;
+        """)
+        rows = cur.fetchall()
+        return [
+            {
+                "claim_id": r[0],
+                "customer_id": r[1],
+                "claim_amount": r[2],
+                "location": r[3],
+                "claim_type": r[4],
+                "status": r[5],
+                "suspicious_claim_score": int(r[6]),
+                "risk_level": r[7],
+                "ai_explanation": r[8]
+            } for r in rows
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
+
+@app.get("/claims/{claim_id}")
+def get_claim_by_id(claim_id: int):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM insurance_ai.ai_claim_explanations WHERE claim_id = %s;
+        """, (claim_id,))
+        row = cur.fetchone()
+        if row:
+            return {
+                "claim_id": row[0],
+                "customer_id": row[1],
+                "claim_amount": row[2],
+                "location": row[3],
+                "claim_type": row[4],
+                "status": row[5],
+                "is_zero_amount": row[6],
+                "is_missing_location": row[7],
+                "high_claim_flag": row[8],
+                "duplicate_claim_flag": row[9],
+                "suspicious_claim_score": int(row[10]),
+                "risk_level": row[11],
+                "ai_explanation": row[12]
+            }
+        raise HTTPException(status_code=404, detail="Claim not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
