@@ -6,13 +6,14 @@ app = FastAPI()
 
 def get_connection():
     try:
-        return psycopg2.connect(
+        conn = psycopg2.connect(
             host=os.environ["REDSHIFT_HOST"],
             port=int(os.environ.get("REDSHIFT_PORT", "5439")),
             database=os.environ.get("REDSHIFT_DB", "dev"),
             user=os.environ["REDSHIFT_USER"],
             password=os.environ["REDSHIFT_PASSWORD"]
         )
+        return conn
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
@@ -26,8 +27,7 @@ def get_all_claims():
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
-            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, 
-                   suspicious_claim_score, risk_level, ai_explanation
+            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, suspicious_claim_score, risk_level, ai_explanation
             FROM insurance_ai.ai_claim_explanations;
         """)
         rows = cur.fetchall()
@@ -39,7 +39,7 @@ def get_all_claims():
                 "location": r[3],
                 "claim_type": r[4],
                 "status": r[5],
-                "suspicious_claim_score": r[6],
+                "suspicious_claim_score": int(r[6]),
                 "risk_level": r[7],
                 "ai_explanation": r[8]
             } for r in rows
@@ -71,7 +71,7 @@ def get_claim_by_id(claim_id: int):
                 "is_missing_location": row[7],
                 "high_claim_flag": row[8],
                 "duplicate_claim_flag": row[9],
-                "suspicious_claim_score": row[10],
+                "suspicious_claim_score": int(row[10]),
                 "risk_level": row[11],
                 "ai_explanation": row[12]
             }
@@ -88,10 +88,7 @@ def get_risky_claims():
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
-            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, 
-                   suspicious_claim_score, risk_level, ai_explanation
-            FROM insurance_ai.ai_claim_explanations 
-            WHERE high_claim_flag = 1 OR suspicious_claim_score >= 2;
+            SELECT * FROM insurance_ai.ai_claim_explanations WHERE high_claim_flag = 1 OR suspicious_claim_score >= 2;
         """)
         rows = cur.fetchall()
         return [
@@ -102,9 +99,9 @@ def get_risky_claims():
                 "location": r[3],
                 "claim_type": r[4],
                 "status": r[5],
-                "suspicious_claim_score": r[6],
-                "risk_level": r[7],
-                "ai_explanation": r[8]
+                "suspicious_claim_score": int(r[10]),
+                "risk_level": r[11],
+                "ai_explanation": r[12]
             } for r in rows
         ]
     except Exception as e:
@@ -119,10 +116,7 @@ def get_suspicious_claims():
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
-            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, 
-                   suspicious_claim_score, risk_level, ai_explanation
-            FROM insurance_ai.ai_claim_explanations 
-            WHERE risk_level = 'Suspicious';
+            SELECT * FROM insurance_ai.ai_claim_explanations WHERE risk_level = 'Suspicious';
         """)
         rows = cur.fetchall()
         return [
@@ -133,9 +127,37 @@ def get_suspicious_claims():
                 "location": r[3],
                 "claim_type": r[4],
                 "status": r[5],
-                "suspicious_claim_score": r[6],
-                "risk_level": r[7],
-                "ai_explanation": r[8]
+                "suspicious_claim_score": int(r[10]),
+                "risk_level": r[11],
+                "ai_explanation": r[12]
+            } for r in rows
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
+
+@app.get("/claims/lowrisk")
+def get_low_risk_claims():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM insurance_ai.ai_claim_explanations WHERE risk_level = 'Low Risk';
+        """)
+        rows = cur.fetchall()
+        return [
+            {
+                "claim_id": r[0],
+                "customer_id": r[1],
+                "claim_amount": r[2],
+                "location": r[3],
+                "claim_type": r[4],
+                "status": r[5],
+                "suspicious_claim_score": int(r[10]),
+                "risk_level": r[11],
+                "ai_explanation": r[12]
             } for r in rows
         ]
     except Exception as e:
@@ -149,11 +171,7 @@ def search_claims(location: str = Query(None), status: str = Query(None)):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        query = """
-            SELECT claim_id, customer_id, claim_amount, location, claim_type, status, 
-                   suspicious_claim_score, risk_level, ai_explanation
-            FROM insurance_ai.ai_claim_explanations WHERE 1=1
-        """
+        query = "SELECT * FROM insurance_ai.ai_claim_explanations WHERE 1=1"
         params = []
         if location:
             query += " AND location = %s"
@@ -171,9 +189,9 @@ def search_claims(location: str = Query(None), status: str = Query(None)):
                 "location": r[3],
                 "claim_type": r[4],
                 "status": r[5],
-                "suspicious_claim_score": r[6],
-                "risk_level": r[7],
-                "ai_explanation": r[8]
+                "suspicious_claim_score": int(r[10]),
+                "risk_level": r[11],
+                "ai_explanation": r[12]
             } for r in rows
         ]
     except Exception as e:
@@ -181,4 +199,3 @@ def search_claims(location: str = Query(None), status: str = Query(None)):
     finally:
         if 'cur' in locals(): cur.close()
         if 'conn' in locals(): conn.close()
-        
